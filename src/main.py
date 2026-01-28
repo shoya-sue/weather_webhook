@@ -65,9 +65,8 @@ def main() -> int:
     メイン処理
 
     Returns:
-        0: 成功
+        0: 成功（通知なしも含む）
         1: エラー
-        2: 通知スキップ（条件未達または通知済み）
     """
     args = parse_args()
     today = date.today()
@@ -85,7 +84,7 @@ def main() -> int:
     # 雨通知が無効の場合はスキップ
     if not config.rain_notify.enabled:
         logger.info("雨通知は無効に設定されています")
-        return 2
+        return 0
 
     # 履歴読み込み
     history_path = Path(config.history_file_path)
@@ -196,9 +195,6 @@ def main() -> int:
             logger.warning(f"履歴保存エラー: {e}")
 
     logger.info(f"処理終了: 通知送信={notifications_sent}, スキップ={notifications_skipped}")
-
-    if notifications_sent == 0 and notifications_skipped == 0:
-        return 2  # 通知なし
 
     return 0
 
