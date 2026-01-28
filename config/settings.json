@@ -1,0 +1,14 @@
+{
+  "locations": [
+    {
+      "id": "tokyo_hq",
+      "name": "本社（東京）",
+      "prefecture_id": "13",
+      "area_id": "東京地方"
+    }
+  ],
+  "rain_notify": {
+    "enabled": true,
+    "threshold": 40
+  }
+}

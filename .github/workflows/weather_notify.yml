@@ -1,0 +1,65 @@
+name: Weather Notification
+
+on:
+  schedule:
+    # 毎日 7:00 JST (22:00 UTC 前日)
+    - cron: '0 22 * * *'
+  workflow_dispatch: # 手動実行用
+
+env:
+  HISTORY_ARTIFACT_NAME: notification-history
+  HISTORY_FILE: history.json
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 前回の履歴をダウンロード（存在しない場合はスキップ）
+      - name: Download previous history
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          name: ${{ env.HISTORY_ARTIFACT_NAME }}
+          path: ./artifacts
+          if_no_artifact_found: ignore
+          workflow_conclusion: success
+          search_artifacts: true
+        continue-on-error: true
+
+      # 履歴ファイルを作業ディレクトリにコピー
+      - name: Prepare history file
+        run: |
+          if [ -f ./artifacts/${{ env.HISTORY_FILE }} ]; then
+            cp ./artifacts/${{ env.HISTORY_FILE }} ./${{ env.HISTORY_FILE }}
+            echo "Previous history found"
+            cat ./${{ env.HISTORY_FILE }}
+          else
+            echo '{"records":[]}' > ./${{ env.HISTORY_FILE }}
+            echo "No previous history, created empty file"
+          fi
+
+      # メイン処理実行
+      - name: Run weather notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          HISTORY_FILE_PATH: ${{ env.HISTORY_FILE }}
+          TZ: Asia/Tokyo
+        run: python src/main.py
+
+      # 更新された履歴をアップロード
+      - name: Upload updated history
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.HISTORY_ARTIFACT_NAME }}
+          path: ${{ env.HISTORY_FILE }}
+          retention-days: 7
+          overwrite: true

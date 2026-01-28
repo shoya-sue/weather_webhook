@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# 実行時生成ファイル
+history.json
+
+# 環境変数・秘密情報
+.env
+
+# ログ
+*.log
